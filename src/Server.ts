@@ -30,6 +30,8 @@ export type ServerStart = ServerStartHttp & ServerStartHttps;
 export interface ServerOptions extends ServerStart{
   db: Database;
   middleware?: string;
+  appMiddleware?: ServerMiddlewareHandler;
+  routes?: ServerRouterHandler;
 }
 
 export default class Server {
@@ -45,6 +47,7 @@ export default class Server {
     this.app = express();
 
     this.autoMiddleware(options.middleware);
+    this.autoRoutes();
   }
 
   private autoMiddleware(autoDir?: string) {
@@ -75,6 +78,12 @@ export default class Server {
       const handle = require(filePath).default();
       this.app.use(handle);
     });
+
+    this.options.appMiddleware?.(this.app);
+  }
+
+  private autoRoutes() {
+    this.options.routes?.(this.app, this.options.db);
   }
 
   public middleware(handle: ServerMiddlewareHandler) {
